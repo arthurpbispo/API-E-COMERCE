@@ -1,0 +1,21 @@
+Raise e Return
+
+Return quando der certo
+
+Raise quando der errado para de executar na hora retorna um erro a api
+
+
+
+
+
+
+
+
+Comando limpar SQL
+docker exec -i mysql-ecommerce mysql -u root -p"aavpb2010" -e "
+SET FOREIGN_KEY_CHECKS = 0;
+TRUNCATE TABLE ecommerce.usuarios;
+TRUNCATE TABLE ecommerce.produtos;
+TRUNCATE TABLE ecommerce.pedidos;
+TRUNCATE TABLE ecommerce.itens_pedido;
+SET FOREIGN_KEY_CHECKS = 1;"

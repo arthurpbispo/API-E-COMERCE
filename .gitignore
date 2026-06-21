@@ -1,0 +1,7 @@
+# Arquivos de credenciais (Segurança)
+.env
+
+# Ambiente virtual do Python
+venv/
+__pycache__/
+*.pyc
