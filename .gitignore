@@ -1,5 +1,6 @@
 # Arquivos de credenciais (Segurança)
 .env
+info.txt
 
 # Ambiente virtual do Python
 venv/
