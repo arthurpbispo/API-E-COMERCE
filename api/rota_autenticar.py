@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from utils.banco import iniciar_banco, salvar_cadastro_banco
+from utils.banco import pegar_conexao_SQL, salvar_cadastro_banco
 from utils.banco import usuario_existe_retorna_senha
 from utils.ultils import tratar_nome_usuario, tratar_email_usuario, criptografar_senha
-from utils.ultils import verificar_senha
+from utils.ultils import verificar_senha, cria_token_acesso
 
 
 #Rota para autenticacao
@@ -18,14 +18,6 @@ class Login(BaseModel):
     usuario: str
     email: str
     senha: str
-
-# Pega a conexao com o banco
-def pegar_conexao_SQL():
-    conexao = iniciar_banco()
-    try:
-        yield conexao
-    finally:
-        conexao.close() # Conexao vai fechar depois da resposta ou em caso de erro
 
 # Rota de cadastro (novo_usuario)
 @router.post("/cadastrar")
@@ -51,8 +43,19 @@ def login(dados: Login, db = Depends(pegar_conexao_SQL)):
 
     if not usuario_logado:
         raise HTTPException(status_code=401, detail="Senha incorreta")
-    
-    return {"status": "sucesso", "mensagem": "usuario logado"}
+
+    dados_para_o_token = {
+        "sub": nome_tratado,
+        "email": email_tratado
+    }
+
+    token_jwt = cria_token_acesso(dados_usuario=dados_para_o_token)
+
+    return {
+        "status": "sucesso",
+        "access_token": token_jwt,
+        "token_type": "bearer"
+    }
 
     
 

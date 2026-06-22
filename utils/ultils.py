@@ -1,6 +1,15 @@
 import os
 import json
+import jwt
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import Depends, HTTPException
+from datetime import datetime, timedelta, timezone
 from cryptography.fernet import Fernet
+
+SECRET_KEY = os.getenv("JWT_SECRET")
+ALGORITHM = "HS256"
+
+security = HTTPBearer()
 
 
 def tratar_nome_usuario(nome):
@@ -87,3 +96,26 @@ def verificar_senha(usuario, senha_banco, senha_digitada):
     except Exception as e:
         print(f"ERRO NA CRIPTOGRAFIA DO LOGIN: {e}")
         return False
+
+def cria_token_acesso(dados_usuario: dict, tempo_expiracao: int = 60):
+    payload = dados_usuario.copy()
+
+    expiracao = datetime.now(timezone.utc) + timedelta(minutes=tempo_expiracao)
+
+    payload.update({"exp": expiracao})
+
+    token_gerado = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+    return token_gerado
+
+
+def verificar_usuario_logado(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    token = credentials.credentials
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+
+        return payload
+        
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="O token expirou. Faça login novamente.")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Token inválido ou corrompido.")

@@ -80,6 +80,13 @@ def criar_tabelas():
             cursor.close()
             conexao.close()
 
+def pegar_conexao_SQL():
+    conexao = iniciar_banco()
+    try:
+        yield conexao
+    finally:
+        conexao.close()
+
 def salvar_cadastro_banco(conexao, nome_usuario, email_usuario, senha_usuario):
     if not conexao:
         print("Sem conexão com o banco de dados.")
@@ -131,3 +138,25 @@ def usuario_existe_retorna_senha(conexao, usuario, email):
         return None
     finally:
         cursor.close()
+
+def atulizar_tabela_produto(
+    conexao, nome, descricao,
+    preco, estoque, categoria
+):
+    if not conexao:
+        print('Sem conexao com o banco de dados')
+        return None
+
+    try:
+        cursor = conexao.cursor()
+
+        comando = """
+            INSERT INTO produtos (nome, descricao,
+            preco, estoque, categoria) VALUES (%s,
+            %s)
+        """
+
+        cursor.execute(comando, (nome, descricao, preco, estoque, categoria))
+
+    except Error as e:
+        print(f'Erro ao adicionar produto: {e}')
