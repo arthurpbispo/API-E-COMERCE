@@ -160,3 +160,71 @@ def atulizar_tabela_produto(
 
     except Error as e:
         print(f'Erro ao adicionar produto: {e}')
+
+def adicionar_pedido_tabela_pedidos(conexao, nome_produto, usuario, email, status_pedido):
+    if not conexao:
+        print('Sem conexao com o banco de dados')
+        return None
+    
+    try:
+        cursor = conexao.cursor()
+
+        comando_verificar_produto_existe = """
+            SELECT EXISTS (
+                SELECT 1 FROM produtos
+                WHERE nome = %s)
+        """
+
+        cursor.execute(comando_verificar_produto_existe, (nome_produto))
+        existe = cursor.fetchone()[0]
+
+        if not existe:
+            print('Produto nao existe no banco')
+            return None
+    except Error as e:
+        print('Nao foi possivel verificar se produto existe no banco')
+
+    try:
+        cursor = conexao.cursor()
+
+        comando_pegar_id = """
+            SELECT id FROM usuarios
+            WHERE usuario = %s AND email = %s
+        """
+
+        cursor.execute(comando_pegar_id, (usuario, email))
+        id_usuario = cursor.fetchone()
+
+        if id_usuario[0] < 1 or not id_usuario:
+            print('ID nao valido')
+            return None
+        
+        id_usuario_int = id_usuario[0]
+        
+    except Error as e:
+        print(f'Erro ao pegar id do usuario {e}')
+
+    if len(status_pedido.strip()) > 50:
+        print('Status grande demais')
+        return None
+    
+    try:
+        cursor = conexao.cursor()
+
+        comando_adicionar_pedido = """
+            INSERT INTO pedidos (id_usuario,
+            status_pedido) VALUES (%s, %s)
+        """
+
+        cursor.execute(comando_adicionar_pedido, (id_usuario_int, status_pedido.strip()))
+        conexao.commit()
+        conexao.close()
+        return True
+    except Error as e:
+        print(f'Erro ao adicionar pedido no banco {e}')
+        return None
+    
+
+        
+
+    
