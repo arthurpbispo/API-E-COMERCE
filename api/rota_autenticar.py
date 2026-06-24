@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from utils.banco import pegar_conexao_SQL, salvar_cadastro_banco
-from utils.banco import usuario_existe_retorna_senha
+from utils.banco import usuario_existe_retorna_senha, verifica_cargo_usuario
 from utils.ultils import tratar_nome_usuario, tratar_email_usuario, criptografar_senha
 from utils.ultils import verificar_senha, cria_token_acesso
 
@@ -13,6 +13,7 @@ class Cadastro(BaseModel):
     usuario: str
     email: str
     senha: str
+    cargo: str
 
 class Login(BaseModel):
     usuario: str
@@ -24,9 +25,10 @@ class Login(BaseModel):
 def cadastrar_usuario(dados: Cadastro, db = Depends(pegar_conexao_SQL)):
     nome_tratado = tratar_nome_usuario(dados.usuario)
     email_tratado = tratar_email_usuario(dados.email)
-    senha_cripto = criptografar_senha(dados.senha)
+    senha_cripto = criptografar_senha(nome_tratado, dados.senha)
+    cargo_tratado = tratar_nome_usuario(dados.cargo)
 
-    salvar_cadastro_banco(db, nome_tratado, email_tratado, senha_cripto)
+    salvar_cadastro_banco(db, nome_tratado, email_tratado, senha_cripto, cargo_tratado)
 
     return {"status": "sucesso"}
 
@@ -43,10 +45,13 @@ def login(dados: Login, db = Depends(pegar_conexao_SQL)):
 
     if not usuario_logado:
         raise HTTPException(status_code=401, detail="Senha incorreta")
+    
+    usuario_admin = verifica_cargo_usuario(db, nome_tratado, email_tratado)
 
     dados_para_o_token = {
         "sub": nome_tratado,
-        "email": email_tratado
+        "email": email_tratado,
+        "cargo": usuario_admin
     }
 
     token_jwt = cria_token_acesso(dados_usuario=dados_para_o_token)

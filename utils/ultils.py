@@ -17,7 +17,7 @@ def tratar_nome_usuario(nome):
     nome_sem_espacos = nome.strip()
 
     if len(nome_sem_espacos) < 2 or len(nome_sem_espacos) > 30:
-        return True
+        return None
     
     else:
         return nome_sem_espacos
@@ -27,7 +27,7 @@ def tratar_email_usuario(email):
 
     return email_sem_espacos
 
-def criptografar_senha(senha):
+def criptografar_senha(usuario, senha):
     chave = Fernet.generate_key()
     fernet = Fernet(chave)
 
@@ -40,7 +40,7 @@ def criptografar_senha(senha):
     chave_string = chave.decode("utf-8")
 
     cadastro = {
-        'usuario': "admin",
+        'usuario': usuario,
         'chave_senha': chave_string
     }
 

@@ -33,7 +33,8 @@ def criar_tabelas():
             id INT AUTO_INCREMENT PRIMARY KEY,
             usuario VARCHAR(100) UNIQUE NOT NULL,
             email VARCHAR(100) UNIQUE NOT NULL,
-            senha VARCHAR(255) NOT NULL
+            senha VARCHAR(255) NOT NULL,
+            cargo VARCHAR(25)
         );
         """)
         
@@ -87,7 +88,7 @@ def pegar_conexao_SQL():
     finally:
         conexao.close()
 
-def salvar_cadastro_banco(conexao, nome_usuario, email_usuario, senha_usuario):
+def salvar_cadastro_banco(conexao, nome_usuario, email_usuario, senha_usuario, cargo_usuario):
     if not conexao:
         print("Sem conexão com o banco de dados.")
         return False
@@ -96,10 +97,10 @@ def salvar_cadastro_banco(conexao, nome_usuario, email_usuario, senha_usuario):
         cursor = conexao.cursor()
 
         comando = """
-            INSERT INTO usuarios (usuario, email, senha) 
-            VALUES (%s, %s, %s)
+            INSERT INTO usuarios (usuario, email, senha, cargo) 
+            VALUES (%s, %s, %s, %s)
         """
-        cursor.execute(comando, (nome_usuario, email_usuario, senha_usuario))
+        cursor.execute(comando, (nome_usuario, email_usuario, senha_usuario, cargo_usuario))
         conexao.commit()
         print("Usuário cadastrado com sucesso no MySQL!")
         return True
@@ -123,6 +124,8 @@ def usuario_existe_retorna_senha(conexao, usuario, email):
         """
         cursor.execute(comando, (usuario, email))
         resultado = cursor.fetchone()
+
+        print(resultado)
         
         if resultado is None:
             return None
@@ -153,7 +156,7 @@ def atulizar_tabela_produto(
         comando = """
             INSERT INTO produtos (nome, descricao,
             preco, estoque, categoria) VALUES (%s,
-            %s)
+            %s, %s, %s, %s)
         """
 
         cursor.execute(comando, (nome, descricao, preco, estoque, categoria))
@@ -224,6 +227,29 @@ def adicionar_pedido_tabela_pedidos(conexao, nome_produto, usuario, email, statu
         print(f'Erro ao adicionar pedido no banco {e}')
         return None
     
+def verifica_cargo_usuario(conexao, nome, email):
+    if not conexao:
+        return None
+    
+    try:
+        cursor = conexao.cursor()
+
+        comando = """
+            SELECT cargo FROM usuarios
+            WHERE usuario = %s AND email = %s
+        """
+
+        cursor.execute(comando, (nome, email))
+        cargo_usuario = cursor.fetchone()
+    except Error as e:
+        print(f'Erro ao buscar cargo do usuario {e}')
+        return None
+
+    if cargo_usuario[0] == "admin":
+        return True
+    else:
+        return False
+
 
         
 

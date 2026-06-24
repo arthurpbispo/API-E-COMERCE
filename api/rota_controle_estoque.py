@@ -18,6 +18,19 @@ def adicionar_produto(
     db = Depends(pegar_conexao_SQL),
     usuario_atual: dict = Depends(verificar_usuario_logado)
 ):
+    
+    print(usuario_atual)
+    
+    if not usuario_atual.get("cargo"):
+        raise HTTPException (
+            status_code=403,
+            detail="Acesso negado. Esta operação é permitida apenas para administradores."
+        )
+
+
+
+
+
     atulizar_tabela_produto(
         db,  
         dados.nome.strip(),
